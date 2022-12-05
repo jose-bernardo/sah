@@ -1,0 +1,14 @@
+<html>
+    <table>
+        <tr>
+            <th>Medical Specialty</th>
+            <th>Date</th>
+        </tr>
+        {{ range .Appointments }}
+        <tr>
+            <td>{{ .MedicalSpecialty }}</td>
+            <td>{{ .Date }}</td>
+        </tr>
+        {{ end }}
+    </table>
+</html>
