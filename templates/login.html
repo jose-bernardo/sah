@@ -1,0 +1,17 @@
+<html>
+    <h2>Welcome to SAH</h2>
+    <form action="" method="POST">
+        <label for="username">Username: </label>
+        <input type="text" name="username" required>
+        <br>
+        <label for="password">Password: </label>
+        <input type="password" name="password" required>
+        <br>
+        <input type="submit" value="Login">
+    </form>
+    {{ if .content }}
+    {{ .content }}
+    <br>
+    {{ end }}
+    <a href="/register">Don't have an account yet? Register here</a>
+</html>

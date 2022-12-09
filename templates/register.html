@@ -1,0 +1,23 @@
+<html>
+    <h2>Register an account</h2>
+    <form action="" method="POST">
+        <label for="username">Username: </label>
+        <input type="text", name="username">
+        <br>
+        <label for="nhs">NHS: </label>
+        <input type="text" name="nhs" required>
+        <br>
+        <label for="name">Full name: </label>
+        <input type="text" name="name" required>
+        <br>
+        <label for="password">Password: </label>
+        <input type="password" name="password">
+        <br>
+        <input type="submit" value="Register">
+    </form>
+    {{ if .content }}
+    {{ .content }}
+    <br>
+    {{ end }}
+    <a href="/login">Already have an account? Log in here</a>
+</html>
