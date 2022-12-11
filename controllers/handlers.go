@@ -11,7 +11,7 @@ import (
 
 func IndexGetHandler() gin.HandlerFunc {
     return func (c *gin.Context) {
-        c.Redirect(http.StatusOK, "login.html")
+        c.Redirect(http.StatusMovedPermanently, "/login")
     }
 }
 
@@ -74,7 +74,12 @@ func RegisterPostHandler() gin.HandlerFunc {
             panic(err.Error())
         }
 
-        if !models.ValidRegister(username, nhs) {
+        isValid, err := models.ValidRegister(username, nhs)
+        if err != nil {
+            panic(err.Error())
+        }
+
+        if !isValid {
             c.HTML(http.StatusConflict, "register.html", gin.H{"content": "Username or NHS already exists"})
             return
         }

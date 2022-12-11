@@ -20,5 +20,5 @@ func main() {
     //private.Use(middleware.AuthRequired)
     routes.PrivateRoutes(private)
 
-    r.Run()
+    r.RunTLS(":8080", "./certs/server.crt", "./certs/server.key")
 }
