@@ -21,7 +21,7 @@ type Appointment struct {
 
 func ConnectDB() {
     tlsConf := helpers.CreateTLSConf()
-    err := mysql.RegisterTLSConfig("custom", &tlsConf)
+    err := mysql.RegisterTLSConfig("DBConfig", &tlsConf)
     if err != nil {
         log.Fatal("Error registering TLS configuration.")
     }
@@ -31,11 +31,13 @@ func ConnectDB() {
         Passwd: os.Getenv("DB_PASS"),
         DBName: "testdb",
         Net: "tcp",
-        //Addr: "192.168.2.1:3306",
-        Addr: "localhost:3306",
+        Addr: "192.168.2.1:3306",
+        //Addr: "localhost:3306",
+	TLSConfig: "DBConfig",
+
     }
 
-
+	print(cfg.FormatDSN())
     DB, err = sql.Open("mysql", cfg.FormatDSN())
     if err != nil {
         log.Fatal("Error connecting to the database.")
