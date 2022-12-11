@@ -121,7 +121,12 @@ func NewAppointmentPostHandler() gin.HandlerFunc {
 }
 
 func AppointmentsGetHandler() gin.HandlerFunc {
+    
     return func (c *gin.Context) {
-        // TODO
+	appointments , err := models.GetAppointmentForUser("123456789")
+	if err != nil {
+            panic(err.Error())
+        }
+	c.HTML(http.StatusOK, "appointments.html", gin.H{"Appointments" : appointments})
     }
 }

@@ -121,3 +121,31 @@ func NewAppointment(nhs string, date string, medicalSpecialty string) (error) {
 
     return nil
 }
+
+func GetAppointmentForUser(nhs string) ([]Appointment, error){
+    rows, err := DB.Query("SELECT * FROM Appointments WHERE patientNhs = ?;", nhs)
+
+    if err != nil {
+        return nil, err
+    }
+
+    defer rows.Close()
+
+    var appointments []Appointment
+    var id int
+    for rows.Next() {
+        var app Appointment
+        if err := rows.Scan(&id, &app.Date, &app.Nhs, &app.MedicalSpecialty); err != nil {
+            return appointments, err
+        }
+
+        appointments = append(appointments, app)
+    }
+
+    if err = rows.Err(); err != nil {
+        return appointments, err
+    }
+
+    return appointments, nil
+}
+
