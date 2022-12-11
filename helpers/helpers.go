@@ -11,7 +11,7 @@ import (
 
 func CreateTLSConf() tls.Config {
     rootCertPool := x509.NewCertPool()
-    pem, err := ioutil.ReadFile("./certs/ca.pem")
+    pem, err := ioutil.ReadFile("./certs/client/ca.pem")
     if err != nil {
         log.Fatal(err)
     }
@@ -21,7 +21,7 @@ func CreateTLSConf() tls.Config {
     }
 
     clientCert := make([]tls.Certificate, 0, 1)
-    certs, err := tls.LoadX509KeyPair("./certs/client-cert.pem", "./certs/client-key.pem")
+    certs, err := tls.LoadX509KeyPair("./certs/client/client-cert.pem", "./certs/client/client-key.pem")
     if err != nil {
         log.Fatal(err)
     }
@@ -50,10 +50,10 @@ func CheckPassword(hash string, password string) bool {
     return true
 }
 
-func EmptyRegisterParams(username string, name string, nhs string, password string) bool {
-    return strings.Trim(username, " ") == "" || strings.Trim(name, " ") == "" || strings.Trim(nhs, " ") == "" || strings.Trim(password, " ") == ""
+func EmptyRegisterParams(email string, name string, nhs string, password string) bool {
+    return strings.Trim(email, " ") == "" || strings.Trim(name, " ") == "" || strings.Trim(nhs, " ") == "" || strings.Trim(password, " ") == ""
 }
 
-func EmptyUserOrPass(username string, password string) bool {
-    return strings.Trim(username, " ") == "" || strings.Trim(password, " ") == ""
-} 
+func EmptyEmailOrPass(email string, password string) bool {
+    return strings.Trim(email, " ") == "" || strings.Trim(password, " ") == ""
+}

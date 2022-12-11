@@ -2,22 +2,21 @@ package models
 
 import (
     "database/sql"
+    "github.com/go-sql-driver/mysql"
     "sah/helpers"
     "log"
     "os"
-
-    "github.com/go-sql-driver/mysql"
 )
 
-var DB *sql.DB
-
 type User struct {
-    Email, Name, Password string
+    Nhs, Email, Name, Password string
 }
 
 type Appointment struct {
     Nhs, MedicalSpecialty, Date string
 }
+
+var DB *sql.DB
 
 func ConnectDB() {
     tlsConf := helpers.CreateTLSConf()
@@ -32,7 +31,8 @@ func ConnectDB() {
         DBName: "testdb",
         Net: "tcp",
         //Addr: "192.168.2.1:3306",
-        Addr: "localhost:3306",
+        Addr: "server.localhost:3306",
+        //TLSConfig: "custom",
     }
 
 
@@ -42,14 +42,14 @@ func ConnectDB() {
     }
 }
 
-func GetUserPass(username string) (string, error) {
-    tx, err := DB.Prepare("SELECT password FROM Patients WHERE username = ?;")
+func GetUserPass(nhs string) (string, error) {
+    tx, err := DB.Prepare("SELECT password FROM Patients WHERE nhs = ?;")
     if err != nil {
         return "", err
     }
     defer tx.Close()
 
-    rows, err := tx.Query(username)
+    rows, err := tx.Query(nhs)
     if err != nil {
         return "", err
     }
@@ -69,34 +69,60 @@ func GetUserPass(username string) (string, error) {
     return password, nil
 }
 
-// TODO check for errors
-func ValidRegister(username string, nhs string) (bool, error) {
-    tx, err := DB.Prepare("SELECT username, nhs FROM Patients WHERE username = ? or nhs = ?;")
+func GetUser(nhs string) User {
+    tx, err := DB.Prepare("SELECT nhs, email, name, password FROM Patients WHERE nhs = ?;")
     if err != nil {
-        return false, err
+        log.Fatal(err.Error())
     }
     defer tx.Close()
 
-    rows, err := tx.Query(username, nhs)
+    rows, err := tx.Query(nhs)
     if err != nil {
-        return false, err
+        log.Fatal(err.Error())
+    }
+
+    var user User
+    if rows.Next() {
+        err := rows.Scan(&user.Nhs, &user.Email, &user.Name, &user.Password)
+        if err != nil {
+            log.Fatal(err.Error())
+        }
+    }
+
+    if rows.Err() != nil {
+        log.Fatal(err.Error())
+    }
+
+    return user;
+}
+
+func ValidRegister(nhs string) bool {
+    tx, err := DB.Prepare("SELECT nhs FROM Patients WHERE nhs = ?;")
+    if err != nil {
+        log.Fatal(err.Error())
+    }
+    defer tx.Close()
+
+    rows, err := tx.Query(nhs)
+    if err != nil {
+        log.Fatal(err.Error())
     }
 
     if rows.Next() {
-        return false, nil
+        return false
     }
 
-    return true, nil
+    return true
 }
 
-func RegisterUser(username string, name string, nhs string, password string) (error) {
-    tx, err := DB.Prepare("INSERT INTO Patients (username, name, nhs, password) VALUES ( ?, ?, ?, ? );")
+func RegisterUser(email string, name string, nhs string, password string) (error) {
+    tx, err := DB.Prepare("INSERT INTO Patients (email, name, nhs, password) VALUES ( ?, ?, ?, ? );")
     if err != nil {
         return err
     }
     defer tx.Close()
 
-    _, err = tx.Exec(username, name, nhs, password)
+    _, err = tx.Exec(email, name, nhs, password)
     if err != nil {
         return err
     }

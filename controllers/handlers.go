@@ -1,12 +1,16 @@
 package controllers
 
 import (
-    "net/http"
+	"fmt"
+	"net/http"
+    "time"
+    "os"
 
-    "sah/helpers"
-    "sah/models"
+	"sah/helpers"
+	"sah/models"
 
-    "github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
 )
 
 func IndexGetHandler() gin.HandlerFunc {
@@ -23,23 +27,39 @@ func LoginGetHandler() gin.HandlerFunc {
 
 func LoginPostHandler() gin.HandlerFunc {
     return func (c *gin.Context) {
-        username := c.PostForm("username")
+        email := c.PostForm("email")
         password := c.PostForm("password")
 
-        if helpers.EmptyUserOrPass(username, password) {
+        if helpers.EmptyEmailOrPass(email, password) {
             c.HTML(http.StatusBadRequest, "login.html", gin.H{"content": "Parameters can't be empty"})
             return
         }
 
-        hash, err := models.GetUserPass(username)
+        hash, err := models.GetUserPass(email)
         if err != nil {
             panic(err.Error())
         }
 
         if !helpers.CheckPassword(hash, password) {
-            c.HTML(http.StatusUnauthorized, "login.html", gin.H{"content": "Incorrect username or password"})
+            c.HTML(http.StatusUnauthorized, "login.html", gin.H{"content": "Incorrect email or password"})
             return
         }
+
+        token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+            "user": email,
+            //"exp": time.Now().Add(time.Hour * 24 * 30).Unix(),
+            "exp": time.Now().Add(time.Second * 30).Unix(),
+        })
+
+        tokenString, err := token.SignedString([]byte(os.Getenv("SECRET_KEY")))
+        if err != nil {
+            fmt.Println("Error signing token.")
+            c.HTML(http.StatusInternalServerError, "login.html", gin.H{})
+            return
+        }
+ 
+        c.SetSameSite(http.SameSiteLaxMode)
+        c.SetCookie("token", tokenString, 3600 * 24 * 30, "", "", false, true)
 
         c.Redirect(http.StatusMovedPermanently, "/dashboard")
     }
@@ -47,7 +67,8 @@ func LoginPostHandler() gin.HandlerFunc {
 
 func LogoutGetHandler() gin.HandlerFunc {
     return func (c *gin.Context) {
-        c.HTML(http.StatusOK, "login.html", gin.H{})
+        c.SetCookie("token", "", -1, "", "", false, true)
+        c.Redirect(http.StatusMovedPermanently, "/login")
     }
 }
 
@@ -59,34 +80,29 @@ func RegisterGetHandler() gin.HandlerFunc {
 
 func RegisterPostHandler() gin.HandlerFunc {
     return func (c *gin.Context) {
-        username := c.PostForm("username")
+        email := c.PostForm("email")
         name := c.PostForm("name")
         nhs := c.PostForm("nhs")
         password := c.PostForm("password")
 
-        if helpers.EmptyRegisterParams(username, name, nhs, password) {
+        if helpers.EmptyRegisterParams(email, name, nhs, password) {
             c.HTML(http.StatusBadRequest, "register.html", gin.H{"content": "Parameters can't be empty"})
             return
         }
 
         hash, err := helpers.HashPassword(password)
         if err != nil {
-            panic(err.Error())
+            fmt.Println("Unable to hash password.")
         }
 
-        isValid, err := models.ValidRegister(username, nhs)
-        if err != nil {
-            panic(err.Error())
-        }
-
-        if !isValid {
+        if !models.ValidRegister(nhs) {
             c.HTML(http.StatusConflict, "register.html", gin.H{"content": "Username or NHS already exists"})
             return
         }
 
-        err = models.RegisterUser(username, name, nhs, hash) 
+        err = models.RegisterUser(email, name, nhs, hash) 
         if err != nil {
-            panic(err.Error())
+            fmt.Println("Error registering user.")
         }
 
         c.Redirect(http.StatusMovedPermanently, "/login")
@@ -95,7 +111,8 @@ func RegisterPostHandler() gin.HandlerFunc {
 
 func DashboardGetHandler() gin.HandlerFunc {
     return func (c *gin.Context) {
-        c.HTML(http.StatusOK, "dashboard.html", gin.H{})
+        user, _ := c.Get("user")
+        c.HTML(http.StatusOK, "dashboard.html", gin.H{"content": user.(models.User).Name})
     }
 }
 

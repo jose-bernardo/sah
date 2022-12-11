@@ -5,6 +5,7 @@ import (
 
     "sah/routes"
     "sah/models"
+    "sah/middleware"
 )
 
 func main() {
@@ -17,8 +18,8 @@ func main() {
     routes.PublicRoutes(public)
 
     private := r.Group("/")
-    //private.Use(middleware.AuthRequired)
+    private.Use(middleware.AuthRequired)
     routes.PrivateRoutes(private)
 
-    r.RunTLS(":8080", "./certs/server.crt", "./certs/server.key")
+    r.RunTLS(":8080", "./certs/server/server-cert.pem", "./certs/server/server-key.pem")
 }
