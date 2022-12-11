@@ -1,10 +1,12 @@
 package models
 
 import (
-	"database/sql"
-	"os"
+    "database/sql"
+    "sah/helpers"
+    "log"
+    "os"
 
-	_ "github.com/go-sql-driver/mysql"
+    "github.com/go-sql-driver/mysql"
 )
 
 var DB *sql.DB
@@ -18,12 +20,26 @@ type Appointment struct {
 }
 
 func ConnectDB() {
-    DB_USER := os.Getenv("DB_USER")
-    DB_PASS := os.Getenv("DB_PASS")
+    tlsConf := helpers.CreateTLSConf()
+    err := mysql.RegisterTLSConfig("custom", &tlsConf)
+    if err != nil {
+        log.Fatal("Error registering TLS configuration.")
+    }
 
-    DB, _ = sql.Open("mysql", DB_USER + ":" + DB_PASS + "@/testdb")
+    cfg := mysql.Config {
+        User: os.Getenv("DB_USER"),
+        Passwd: os.Getenv("DB_PASS"),
+        DBName: "testdb",
+        Net: "tcp",
+        //Addr: "192.168.2.1:3306",
+        Addr: "localhost:3306",
+    }
 
-    DB.Ping()
+
+    DB, err = sql.Open("mysql", cfg.FormatDSN())
+    if err != nil {
+        log.Fatal("Error connecting to the database.")
+    }
 }
 
 func GetUserPass(username string) (string, error) {
@@ -53,23 +69,24 @@ func GetUserPass(username string) (string, error) {
     return password, nil
 }
 
-func ValidRegister(username string, nhs string) bool {
+// TODO check for errors
+func ValidRegister(username string, nhs string) (bool, error) {
     tx, err := DB.Prepare("SELECT username, nhs FROM Patients WHERE username = ? or nhs = ?;")
     if err != nil {
-        return false
+        return false, err
     }
     defer tx.Close()
 
     rows, err := tx.Query(username, nhs)
     if err != nil {
-        return false
+        return false, err
     }
 
     if rows.Next() {
-        return false
+        return false, nil
     }
 
-    return true
+    return true, nil
 }
 
 func RegisterUser(username string, name string, nhs string, password string) (error) {
