@@ -106,7 +106,8 @@ func RegisterUser(username string, name string, nhs string, password string) (er
     return nil
 }
 
-func NewAppointment(date string, nhs string, medicalSpecialty string) (error) {
+func NewAppointment(nhs string, date string, medicalSpecialty string) (error) {
+    
     tx, err := DB.Prepare("INSERT INTO Appointments (date, patientNhs, medicalSpecialty) VALUES ( ?, ?, ? );")
     if err != nil {
         return err
