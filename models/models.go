@@ -13,14 +13,17 @@ type User struct {
 }
 
 type Appointment struct {
-    Nhs, MedicalSpecialty, Date string
+    Nhs, MedicalSpecialty, Date string;
+    Doctor sql.NullString;
+    Room sql.NullInt32;
+    State bool
 }
 
 var DB *sql.DB
 
 func ConnectDB() {
     tlsConf := helpers.CreateTLSConf()
-    err := mysql.RegisterTLSConfig("custom", &tlsConf)
+    err := mysql.RegisterTLSConfig("DBConfig", &tlsConf)
     if err != nil {
         log.Fatal("Error registering TLS configuration.")
     }
@@ -30,11 +33,9 @@ func ConnectDB() {
         Passwd: os.Getenv("DB_PASS"),
         DBName: "testdb",
         Net: "tcp",
-        //Addr: "192.168.2.1:3306",
-        Addr: "server.localhost:3306",
-        //TLSConfig: "custom",
+        Addr: "localhost:3306",
+	    //TLSConfig: "DBConfig",
     }
-
 
     DB, err = sql.Open("mysql", cfg.FormatDSN())
     if err != nil {
@@ -42,55 +43,27 @@ func ConnectDB() {
     }
 }
 
-func GetUserPass(nhs string) (string, error) {
-    tx, err := DB.Prepare("SELECT password FROM Patients WHERE nhs = ?;")
+func GetUser(email string) User {
+    tx, err := DB.Prepare("SELECT nhs, email, name, password FROM Patients WHERE email = ?;")
     if err != nil {
-        return "", err
+        panic(err.Error())
     }
     defer tx.Close()
 
-    rows, err := tx.Query(nhs)
+    rows, err := tx.Query(email)
     if err != nil {
-        return "", err
-    }
-
-    password := ""
-    if rows.Next() {
-        err := rows.Scan(&password)
-        if err != nil {
-            return "", err
-        }
-    }
-
-    if rows.Err() != nil {
-        return "", err
-    }
-
-    return password, nil
-}
-
-func GetUser(nhs string) User {
-    tx, err := DB.Prepare("SELECT nhs, email, name, password FROM Patients WHERE nhs = ?;")
-    if err != nil {
-        log.Fatal(err.Error())
-    }
-    defer tx.Close()
-
-    rows, err := tx.Query(nhs)
-    if err != nil {
-        log.Fatal(err.Error())
+        panic(err.Error())
     }
 
     var user User
     if rows.Next() {
-        err := rows.Scan(&user.Nhs, &user.Email, &user.Name, &user.Password)
-        if err != nil {
-            log.Fatal(err.Error())
+        if err := rows.Scan(&user.Nhs, &user.Email, &user.Name, &user.Password); err != nil {
+            panic(err.Error())
         }
     }
 
     if rows.Err() != nil {
-        log.Fatal(err.Error())
+        panic(err.Error())
     }
 
     return user;
@@ -99,13 +72,13 @@ func GetUser(nhs string) User {
 func ValidRegister(nhs string) bool {
     tx, err := DB.Prepare("SELECT nhs FROM Patients WHERE nhs = ?;")
     if err != nil {
-        log.Fatal(err.Error())
+        panic(err.Error())
     }
     defer tx.Close()
 
     rows, err := tx.Query(nhs)
     if err != nil {
-        log.Fatal(err.Error())
+        panic(err.Error())
     }
 
     if rows.Next() {
@@ -130,7 +103,36 @@ func RegisterUser(email string, name string, nhs string, password string) (error
     return nil
 }
 
-func NewAppointment(date string, nhs string, medicalSpecialty string) (error) {
+func GetMedicalSpecialties() ([]string, error){
+    tx, err := DB.Prepare("SELECT name FROM MedicalSpecialty;")
+    if err != nil {
+        return nil, err
+    }
+    defer tx.Close()
+
+    rows, err := tx.Query()
+    if err != nil {
+        return nil, err
+    }
+
+    var medicalSpecialties []string
+    for rows.Next() {
+        var ms string
+        if err := rows.Scan(&ms); err != nil {
+            return medicalSpecialties, err
+        }
+
+        medicalSpecialties = append(medicalSpecialties, ms)
+    }
+
+    if rows.Err() != nil {
+        return medicalSpecialties, err
+    }
+
+    return medicalSpecialties, nil
+}
+
+func NewAppointment(nhs string, date string, medicalSpecialty string) (error) {
     tx, err := DB.Prepare("INSERT INTO Appointments (date, patientNhs, medicalSpecialty) VALUES ( ?, ?, ? );")
     if err != nil {
         return err
@@ -143,4 +145,33 @@ func NewAppointment(date string, nhs string, medicalSpecialty string) (error) {
     }
 
     return nil
+}
+
+func GetUserAppointments(nhs string) ([]Appointment, error){
+    tx, err := DB.Prepare("SELECT date, medicalSpecialty, state, doctorName, room FROM Appointments WHERE patientNhs = ?;")
+    if err != nil {
+        return nil, err
+    }
+    defer tx.Close()
+
+    rows, err := tx.Query(nhs)
+    if err != nil {
+        return nil, err
+    }
+
+    var appointments []Appointment
+    for rows.Next() {
+        var app Appointment
+        if err := rows.Scan(&app.Date, &app.MedicalSpecialty, &app.State, &app.Doctor, &app.Room); err != nil {
+            return appointments, err
+        }
+
+        appointments = append(appointments, app)
+    }
+
+    if rows.Err() != nil {
+        return appointments, err
+    }
+
+    return appointments, nil
 }

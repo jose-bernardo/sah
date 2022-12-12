@@ -3,11 +3,23 @@
         <tr>
             <th>Medical Specialty</th>
             <th>Date</th>
+            <th>Doctor</th>
+            <th>Room</th>
+            <th>State</th>
         </tr>
         {{ range .Appointments }}
         <tr>
             <td>{{ .MedicalSpecialty }}</td>
             <td>{{ .Date }}</td>
+            {{ if .State }}
+            <td>{{ .Doctor }}</td>
+            <td>{{ .Room }}</td>
+            <td style="color: green;">Settled</td>
+            {{ else }}
+            <td>Not assigned</td>
+            <td>Not assigned</td>
+            <td style="color: gold;">Pending</td>
+            {{ end }}
         </tr>
         {{ end }}
     </table>

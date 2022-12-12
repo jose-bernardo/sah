@@ -16,6 +16,7 @@ func AuthRequired(c *gin.Context) {
     tokenString, err := c.Cookie("token")
     if err != nil {
         c.AbortWithStatus(http.StatusUnauthorized)
+        return
     }
 
     token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
@@ -32,8 +33,8 @@ func AuthRequired(c *gin.Context) {
             c.AbortWithStatus(http.StatusUnauthorized)
         }
 
-        email := claims["user"].(string)
-        user := models.GetUser(email)
+        nhs := claims["user"].(string)
+        user := models.GetUser(nhs)
  
         c.Set("user", user)
 
@@ -41,5 +42,8 @@ func AuthRequired(c *gin.Context) {
 
     } else {
         c.AbortWithStatus(http.StatusUnauthorized)
+        return
     }
 }
+
+// TODO verify if user is already logged in

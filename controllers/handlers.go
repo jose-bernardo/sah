@@ -35,20 +35,16 @@ func LoginPostHandler() gin.HandlerFunc {
             return
         }
 
-        hash, err := models.GetUserPass(email)
-        if err != nil {
-            panic(err.Error())
-        }
+        user := models.GetUser(email)
 
-        if !helpers.CheckPassword(hash, password) {
+        if !helpers.CheckPassword(user.Password, password) {
             c.HTML(http.StatusUnauthorized, "login.html", gin.H{"content": "Incorrect email or password"})
             return
         }
 
         token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-            "user": email,
-            //"exp": time.Now().Add(time.Hour * 24 * 30).Unix(),
-            "exp": time.Now().Add(time.Second * 30).Unix(),
+            "user": user.Nhs,
+            "exp": time.Now().Add(time.Hour).Unix(),
         })
 
         tokenString, err := token.SignedString([]byte(os.Getenv("SECRET_KEY")))
@@ -57,9 +53,12 @@ func LoginPostHandler() gin.HandlerFunc {
             c.HTML(http.StatusInternalServerError, "login.html", gin.H{})
             return
         }
- 
+
         c.SetSameSite(http.SameSiteLaxMode)
-        c.SetCookie("token", tokenString, 3600 * 24 * 30, "", "", false, true)
+        c.SetCookie("token", tokenString, 3600, "", "", false, true)
+        if err !=nil {
+            panic(err.Error())
+        }
 
         c.Redirect(http.StatusMovedPermanently, "/dashboard")
     }
@@ -67,8 +66,9 @@ func LoginPostHandler() gin.HandlerFunc {
 
 func LogoutGetHandler() gin.HandlerFunc {
     return func (c *gin.Context) {
+        // Delete user cookie
         c.SetCookie("token", "", -1, "", "", false, true)
-        c.Redirect(http.StatusMovedPermanently, "/login")
+        c.Redirect(http.StatusTemporaryRedirect, "/login")
     }
 }
 
@@ -118,27 +118,39 @@ func DashboardGetHandler() gin.HandlerFunc {
 
 func NewAppointmentGetHandler() gin.HandlerFunc {
     return func (c *gin.Context) {
-        c.HTML(http.StatusOK, "new_appointment.html", gin.H{})
+        medicalSpecialties, err := models.GetMedicalSpecialties()
+        if err != nil {
+            panic(err.Error())
+        }
+
+        c.HTML(http.StatusOK, "new_appointment.html", gin.H{"MedicalSpecialties": medicalSpecialties})
     }
 }
 
 func NewAppointmentPostHandler() gin.HandlerFunc {
     return func (c *gin.Context) {
-        nhs := c.PostForm("nhs")
+        user, _  := c.Get("user")
         date := c.PostForm("date")
         medicalSpecialty := c.PostForm("medicalSpecialty")
 
-        err := models.NewAppointment(nhs, date, medicalSpecialty)
+        err := models.NewAppointment(user.(models.User).Nhs, date, medicalSpecialty)
         if err != nil {
             panic(err.Error())
         }
 
-        c.Redirect(http.StatusCreated, "/dashboard")
+        // TODO html new_appointment success
+        c.Redirect(http.StatusMovedPermanently, "/new_appointment")
     }
 }
 
 func AppointmentsGetHandler() gin.HandlerFunc {
     return func (c *gin.Context) {
-        // TODO
+        user, _ := c.Get("user")
+        appointments , err := models.GetUserAppointments(user.(models.User).Nhs)
+        if err != nil {
+            panic(err.Error())
+        }
+
+	c.HTML(http.StatusOK, "appointments.html", gin.H{"Appointments" : appointments})
     }
 }
