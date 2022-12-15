@@ -18,5 +18,7 @@ func PrivateRoutes(g *gin.RouterGroup) {
     g.GET("/new_appointment", controllers.NewAppointmentGetHandler())
     g.POST("/new_appointment", controllers.NewAppointmentPostHandler())
     g.GET("/appointments", controllers.AppointmentsGetHandler())
+    g.GET("/conferencing", controllers.ConferecencingGetHandler())
+    g.POST("/conferencing", controllers.ConferecencingPostHandler())
     g.GET("/logout", controllers.LogoutGetHandler())
 }

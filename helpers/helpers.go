@@ -54,6 +54,6 @@ func EmptyRegisterParams(email string, name string, nhs string, password string)
     return strings.Trim(email, " ") == "" || strings.Trim(name, " ") == "" || strings.Trim(nhs, " ") == "" || strings.Trim(password, " ") == ""
 }
 
-func EmptyEmailOrPass(email string, password string) bool {
-    return strings.Trim(email, " ") == "" || strings.Trim(password, " ") == ""
+func EmptyNhsOrPass(nhs string, password string) bool {
+    return strings.Trim(nhs, " ") == "" || strings.Trim(password, " ") == ""
 }

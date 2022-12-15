@@ -27,18 +27,18 @@ func LoginGetHandler() gin.HandlerFunc {
 
 func LoginPostHandler() gin.HandlerFunc {
     return func (c *gin.Context) {
-        email := c.PostForm("email")
+        nhs := c.PostForm("nhs")
         password := c.PostForm("password")
 
-        if helpers.EmptyEmailOrPass(email, password) {
+        if helpers.EmptyNhsOrPass(nhs, password) {
             c.HTML(http.StatusBadRequest, "login.html", gin.H{"content": "Parameters can't be empty"})
             return
         }
 
-        user := models.GetUser(email)
+        user := models.GetUser(nhs)
 
         if !helpers.CheckPassword(user.Password, password) {
-            c.HTML(http.StatusUnauthorized, "login.html", gin.H{"content": "Incorrect email or password"})
+            c.HTML(http.StatusUnauthorized, "login.html", gin.H{"content": "Incorrect nhs or password"})
             return
         }
 
@@ -95,8 +95,8 @@ func RegisterPostHandler() gin.HandlerFunc {
             fmt.Println("Unable to hash password.")
         }
 
-        if !models.ValidRegister(nhs) {
-            c.HTML(http.StatusConflict, "register.html", gin.H{"content": "Username or NHS already exists"})
+        if !models.ValidRegister(nhs, email) {
+            c.HTML(http.StatusConflict, "register.html", gin.H{"content": "Email or NHS already exists"})
             return
         }
 
@@ -152,5 +152,17 @@ func AppointmentsGetHandler() gin.HandlerFunc {
         }
 
 	c.HTML(http.StatusOK, "appointments.html", gin.H{"Appointments" : appointments})
+    }
+}
+
+func ConferecencingGetHandler() gin.HandlerFunc {
+    return func (c *gin.Context) {
+        c.HTML(http.StatusOK, "conferencing.html", gin.H{})
+    }
+}
+
+func ConferecencingPostHandler() gin.HandlerFunc {
+    return func (c *gin.Context) {
+        c.HTML(http.StatusOK, "conferencing.html", gin.H{})
     }
 }

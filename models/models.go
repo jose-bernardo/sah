@@ -43,14 +43,14 @@ func ConnectDB() {
     }
 }
 
-func GetUser(email string) User {
-    tx, err := DB.Prepare("SELECT nhs, email, name, password FROM Patients WHERE email = ?;")
+func GetUser(nhs string) User {
+    tx, err := DB.Prepare("SELECT nhs, email, name, password FROM Patients WHERE nhs = ?;")
     if err != nil {
         panic(err.Error())
     }
     defer tx.Close()
 
-    rows, err := tx.Query(email)
+    rows, err := tx.Query(nhs)
     if err != nil {
         panic(err.Error())
     }
@@ -69,14 +69,14 @@ func GetUser(email string) User {
     return user;
 }
 
-func ValidRegister(nhs string) bool {
-    tx, err := DB.Prepare("SELECT nhs FROM Patients WHERE nhs = ?;")
+func ValidRegister(nhs string, email string) bool {
+    tx, err := DB.Prepare("SELECT nhs, email FROM Patients WHERE nhs = ? or email = ?;")
     if err != nil {
         panic(err.Error())
     }
     defer tx.Close()
 
-    rows, err := tx.Query(nhs)
+    rows, err := tx.Query(nhs, email)
     if err != nil {
         panic(err.Error())
     }
