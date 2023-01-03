@@ -1,5 +1,7 @@
 <html>
-    <table>
+    <h2>Your appointments</h2>
+    <table border=1 cellspacing=2 cellpadding=10>
+        {{ if .Appointments }}
         <tr>
             <th>Medical Specialty</th>
             <th>Date</th>
@@ -7,6 +9,9 @@
             <th>Room</th>
             <th>State</th>
         </tr>
+        {{ else }}
+        <p>You don't have any appointments.</p>
+        {{ end }}
         {{ range .Appointments }}
         <tr>
             <td>{{ .MedicalSpecialty }}</td>

@@ -12,6 +12,17 @@ CREATE TABLE Patients (
     PRIMARY KEY (nhs)
 );
 
+CREATE TABLE OTP (
+    patientNhs VARCHAR(255) NOT NULL,
+    otp VARCHAR(255) NOT NULL,
+    created TIMESTAMP NOT NULL,
+
+    FOREIGN KEY (patientNhs)
+        REFERENCES Patients (nhs),
+
+    PRIMARY KEY (patientNhs)
+);
+
 CREATE TABLE MedicalSpecialty (
     name VARCHAR(255) NOT NULL,
 
@@ -19,34 +30,33 @@ CREATE TABLE MedicalSpecialty (
 );
 
 
-CREATE TABLE Doctor (
-    doctorId INT NOT NULL AUTO_INCREMENT,
+CREATE TABLE Employee (
+    id INT NOT NULL AUTO_INCREMENT,
     password VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,
     medicalSpecialty VARCHAR(255) NOT NULL,
 
     FOREIGN KEY (medicalSpecialty)
         REFERENCES MedicalSpecialty (name),
-
-    PRIMARY KEY (doctorId, name)
+    PRIMARY KEY (id)
 );
+
 
 CREATE TABLE Appointments (
     id INT NOT NULL AUTO_INCREMENT,
     `date` DATETIME NOT NULL,
     patientNhs VARCHAR(255) NOT NULL,
+    medicalSpecialty VARCHAR(255) NOT NULL,
     room INT,
     doctorId INT,
-    doctorName VARCHAR(255),
-    medicalSpecialty VARCHAR(255) NOT NULL,
     state BOOLEAN NOT NULL DEFAULT 0,
 
     FOREIGN KEY (patientNhs)
         REFERENCES Patients (nhs),
+    FOREIGN KEY (doctorId)
+        REFERENCES Employee (id),
     FOREIGN KEY (medicalSpecialty)
         REFERENCES MedicalSpecialty (name),
-    FOREIGN KEY (doctorId, doctorName)
-        REFERENCES Doctor (doctorId, name),
 
     PRIMARY KEY (id)
 );

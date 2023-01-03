@@ -1,11 +1,12 @@
 package models
 
 import (
-    "database/sql"
-    "github.com/go-sql-driver/mysql"
-    "sah/helpers"
-    "log"
-    "os"
+	"database/sql"
+	"log"
+	"os"
+	"sah/helpers"
+
+	"github.com/go-sql-driver/mysql"
 )
 
 type User struct {
@@ -19,7 +20,12 @@ type Appointment struct {
     State bool
 }
 
+type Otp struct {
+    Value, Created string
+}
+
 var DB *sql.DB
+
 
 func ConnectDB() {
     tlsConf := helpers.CreateTLSConf()
@@ -43,14 +49,15 @@ func ConnectDB() {
     }
 }
 
-func GetUser(email string) User {
-    tx, err := DB.Prepare("SELECT nhs, email, name, password FROM Patients WHERE email = ?;")
+
+func GetUser(nhs string) User {
+    tx, err := DB.Prepare("SELECT nhs, email, name, password FROM Patients WHERE nhs = ?;")
     if err != nil {
         panic(err.Error())
     }
     defer tx.Close()
 
-    rows, err := tx.Query(email)
+    rows, err := tx.Query(nhs)
     if err != nil {
         panic(err.Error())
     }
@@ -69,14 +76,15 @@ func GetUser(email string) User {
     return user;
 }
 
-func ValidRegister(nhs string) bool {
-    tx, err := DB.Prepare("SELECT nhs FROM Patients WHERE nhs = ?;")
+
+func ValidRegister(nhs string, email string) bool {
+    tx, err := DB.Prepare("SELECT nhs, email FROM Patients WHERE nhs = ? or email = ?;")
     if err != nil {
         panic(err.Error())
     }
     defer tx.Close()
 
-    rows, err := tx.Query(nhs)
+    rows, err := tx.Query(nhs, email)
     if err != nil {
         panic(err.Error())
     }
@@ -87,6 +95,7 @@ func ValidRegister(nhs string) bool {
 
     return true
 }
+
 
 func RegisterUser(email string, name string, nhs string, password string) (error) {
     tx, err := DB.Prepare("INSERT INTO Patients (email, name, nhs, password) VALUES ( ?, ?, ?, ? );")
@@ -102,6 +111,7 @@ func RegisterUser(email string, name string, nhs string, password string) (error
 
     return nil
 }
+
 
 func GetMedicalSpecialties() ([]string, error){
     tx, err := DB.Prepare("SELECT name FROM MedicalSpecialty;")
@@ -132,6 +142,7 @@ func GetMedicalSpecialties() ([]string, error){
     return medicalSpecialties, nil
 }
 
+
 func NewAppointment(nhs string, date string, medicalSpecialty string) (error) {
     tx, err := DB.Prepare("INSERT INTO Appointments (date, patientNhs, medicalSpecialty) VALUES ( ?, ?, ? );")
     if err != nil {
@@ -147,8 +158,9 @@ func NewAppointment(nhs string, date string, medicalSpecialty string) (error) {
     return nil
 }
 
+
 func GetUserAppointments(nhs string) ([]Appointment, error){
-    tx, err := DB.Prepare("SELECT date, medicalSpecialty, state, doctorName, room FROM Appointments WHERE patientNhs = ?;")
+    tx, err := DB.Prepare("SELECT date, a.medicalSpecialty, state, e.name, room FROM Appointments a LEFT JOIN Employee e ON doctorId = e.id WHERE patientNhs = ?;")
     if err != nil {
         return nil, err
     }
@@ -175,3 +187,64 @@ func GetUserAppointments(nhs string) ([]Appointment, error){
 
     return appointments, nil
 }
+
+
+func SetOTP(nhs string, otp string) (error) {
+    tx, err := DB.Prepare("REPLACE INTO Otp (patientNhs, otp, created) VALUES ( ?, ?, NOW());")
+    if err != nil {
+        return err
+    }
+    defer tx.Close()
+
+    _, err = tx.Exec(nhs, otp)
+    if err != nil {
+        return err
+    }
+
+    return nil
+}
+
+
+/*
+func GetOTP(nhs string) (Otp, error) {
+    tx, err := DB.Prepare("SELECT otp, created FROM OTP WHERE patientNhs = ?;")
+    if err != nil {
+        return Otp{}, err
+    }
+    defer tx.Close()
+
+    rows, err := tx.Query(nhs)
+    if err != nil {
+        return Otp{}, err
+    }
+ 
+    var otp Otp
+    if rows.Next() {
+        if err := rows.Scan(&otp.Value, &otp.Created); err != nil {
+            return otp, err
+        }
+    }
+
+    if rows.Err() != nil {
+        return Otp{}, err
+    }
+
+    return otp, nil;
+}
+
+
+func DeleteOTP(nhs string) error {
+    tx, err := DB.Prepare("DELETE FROM Otp WHERE patientNhs = ?")
+    if err != nil {
+        return err
+    }
+    defer tx.Close()
+
+    _, err = tx.Exec(nhs)
+    if err != nil {
+        return err
+    }
+
+    return nil
+}
+*/
