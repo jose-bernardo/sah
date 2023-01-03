@@ -1,22 +1,26 @@
-sudo iptables -S:
--P INPUT DROP
--P FORWARD DROP
--P OUTPUT DROP
--N DOCKER
--N DOCKER-ISOLATION-STAGE-1
--N DOCKER-ISOLATION-STAGE-2
--N DOCKER-USER
--A FORWARD -d 192.168.0.100/32 -p tcp -m tcp --dport 443 -j ACCEPT
--A FORWARD -d 192.168.0.100/32 -p tcp -m tcp --dport 8080 -j ACCEPT
--A FORWARD -s 192.168.0.100/32 -d 192.168.2.1/32 -p tcp -m tcp --dport 3306 -j ACCEPT
--A FORWARD -i enp0s10 -o enp0s3 -m state --state ESTABLISHED -j ACCEPT
--A FORWARD -i enp0s3 -o enp0s09 -m state --state ESTABLISHED -j ACCEPT
--A FORWARD -i enp0s3 -o enp0s10 -m state --state ESTABLISHED -j ACCEPT
 
--t nat:
--P PREROUTING ACCEPT
--P INPUT ACCEPT
--P OUTPUT ACCEPT
--P POSTROUTING ACCEPT
--N DOCKER
--A PREROUTING -d 192.168.2.254/32 -p tcp -m tcp --dport 443 -j DNAT --to-destination 192.168.0.100:8080
+# flush rules
+sudo iptables -F
+sudo iptables -t nat -F
+
+sudo iptables -P INPUT DROP
+sudo iptables -P FORWARD DROP
+sudo iptables -P OUTPUT DROP
+
+# frontoffice server to database
+sudo iptables -A FORWARD -s 192.168.0.100/32 -d 192.168.2.1/32 -p tcp -m tcp --dport 3306 -j ACCEPT
+# database replies to frontoffice server
+sudo iptables -A FORWARD -i enp0s10 -o enp0s3 -m state --state ESTABLISHED -j ACCEPT
+
+# backoffice server to database
+sudo iptables -A FORWARD -s 192.168.1.1/32 -d 192.168.2.1/32 -p tcp -m tcp --dport 3306 -j ACCEPT
+# database replies to backoffice server
+sudo iptables -A FORWARD -i enp0s10 -o enp0s8 -m state --state ESTABLISHED -j ACCEPT
+
+# frontoffice server replies to clients
+sudo iptables -A FORWARD -i enp0s3 -o enp0s09 -m state --state ESTABLISHED -j ACCEPT
+
+
+# forward https messages to frontoffice server
+sudo iptables -A FORWARD -d 192.168.0.100/32 -p tcp -m tcp --dport 8080 -j ACCEPT
+sudo iptables -t nat -A PREROUTING -d 192.168.2.254/32 -p tcp -m tcp --dport 443 -j DNAT --to-destination 192.168.0.100:8080
