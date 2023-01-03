@@ -15,7 +15,7 @@ import (
 func AuthRequired(c *gin.Context) {
     tokenString, err := c.Cookie("token")
     if err != nil {
-        c.AbortWithStatus(http.StatusUnauthorized)
+        c.Redirect(http.StatusTemporaryRedirect, "/login")
         return
     }
 
@@ -30,7 +30,8 @@ func AuthRequired(c *gin.Context) {
     if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
         exp := claims["exp"].(float64)
         if float64(time.Now().Unix()) > exp {
-            c.AbortWithStatus(http.StatusUnauthorized)
+            c.Redirect(http.StatusTemporaryRedirect, "/login")
+            return
         }
 
         nhs := claims["user"].(string)
@@ -41,7 +42,7 @@ func AuthRequired(c *gin.Context) {
         c.Next()
 
     } else {
-        c.AbortWithStatus(http.StatusUnauthorized)
+        c.Redirect(http.StatusTemporaryRedirect, "/login")
         return
     }
 }
