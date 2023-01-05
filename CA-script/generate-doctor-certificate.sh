@@ -18,4 +18,4 @@ openssl rsa -in doctor-key.pem -out doctor-private.pem
 
 cd ..
 # Signing
-./sign-certificates.sh "./doctor-$doctor_id/doctor-request.pem" "./doctor-$doctor_id/doctor-public.pem"
+./sign-certificates.sh "./doctor-$doctor_id/doctor-request.pem" "./doctor-$doctor_id/doctor-cert.pem"
