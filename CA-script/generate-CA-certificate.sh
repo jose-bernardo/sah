@@ -14,4 +14,4 @@ cd "$ca_dir"
 
 openssl genrsa -out ca-key.pem 4096
 
-openssl req -x509 -new -nodes -key ca-key.pem -sha256 -days 3600 -out ca.pem -subj "/CN=$ca_name"
+openssl req -x509 -new -nodes -key ca-key.pem -sha256 -days 3600 -out ca.pem -subj "/CN=$ca_name" -addext "subjectAltName=DNS:$ca_name"

@@ -17,7 +17,7 @@ if [ ! -f "$key_file" ]; then
 fi
 
 # Sign the CSR and create a certificate
-openssl x509 -req -days 3600 -in $key_file -CA ./CA_sah/ca.pem -CAkey ./CA_sah/ca-key.pem -set_serial 01 -out "$output_file"
+openssl x509 -req -days 3600 -in $key_file -sha256 -CA ./CA_sah/ca.pem -CAkey ./CA_sah/ca-key.pem -set_serial 01 -out "$output_file"
 
 
 echo "Successfully signed key file $key_file"
