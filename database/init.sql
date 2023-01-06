@@ -12,16 +12,6 @@ CREATE TABLE Patients (
     PRIMARY KEY (nhs)
 );
 
-CREATE TABLE OTP (
-    patientNhs VARCHAR(255) NOT NULL,
-    otp VARCHAR(255) NOT NULL,
-    created TIMESTAMP NOT NULL,
-
-    FOREIGN KEY (patientNhs)
-        REFERENCES Patients (nhs),
-
-    PRIMARY KEY (patientNhs)
-);
 
 CREATE TABLE MedicalSpecialty (
     name VARCHAR(255) NOT NULL,
