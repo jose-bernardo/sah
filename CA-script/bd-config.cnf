@@ -1,0 +1,24 @@
+[req]
+default_bits = 4096
+default_md = sha256
+distinguished_name = req_distinguished_name
+req_extensions = v3_req
+x509_extensions = v3_ca
+
+prompt = no
+[req_distinguished_name]
+C = PT
+ST = VA
+L = SomeCity
+O = SAH
+OU = SAH
+CN = 192.168.2.1
+[v3_req]
+# basicConstraints       = critical,CA:true
+[v3_ca]
+# subjectKeyIdentifier = A2:0F:72:65:4A:79:90:01:2B:88:E5:B8:A0:BD:B3:DB:08:64:51:DB
+# authorityKeyIdentifier = keyid:A2:0F:72:65:4A:79:90:01:2B:88:E5:B8:A0:BD:B3:DB:08:64:51:DB
+# basicConstraints       = critical,CA:true
+subjectAltName = @alt_names
+[alt_names]
+IP.1 = 192.168.2.1

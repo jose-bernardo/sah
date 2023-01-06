@@ -13,7 +13,7 @@ import (
 
 func CreateTLSConf() tls.Config {
     rootCertPool := x509.NewCertPool()
-    pem, err := ioutil.ReadFile("./certs/ca.pem")
+    pem, err := ioutil.ReadFile("./certs/bd-client/ca.pem")
     if err != nil {
         log.Fatal(err)
     }
@@ -23,7 +23,7 @@ func CreateTLSConf() tls.Config {
     }
 
     clientCert := make([]tls.Certificate, 0, 1)
-    certs, err := tls.LoadX509KeyPair("./certs/client-cert.pem", "./certs/client-key.pem")
+    certs, err := tls.LoadX509KeyPair("./certs/bd-client/bd-client-cert.pem", "./certs/bd-client/bd-client-key.pem")
     if err != nil {
         log.Fatal(err)
     }

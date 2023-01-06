@@ -39,8 +39,8 @@ func ConnectDB() {
         Passwd: os.Getenv("DB_PASS"),
         DBName: "testdb",
         Net: "tcp",
-        Addr: "localhost:3306",
-	    //TLSConfig: "DBConfig",
+        Addr: "192.168.2.1:3306",
+	TLSConfig: "DBConfig",
     }
 
     DB, err = sql.Open("mysql", cfg.FormatDSN())
