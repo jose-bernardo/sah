@@ -1,45 +1,78 @@
 # SIRS Project
 
-## Database setup
-### Create database keys and certificate
-` cd setup `
+## CA  setup
+Setup CA  
+` cd setup `  
+` bash generate-CA-certificate.sh `  
+Note: All key generation must be made on the same with the same CA certificates
 
-Create CA certificate  
-` openssl genrsa 2048 > ca-key.pem `  
-` openssl req -new -x509 -nodes -days 3600 -key ca-key.pem -out ca.pem` 
+## Front office Web Server setup 
+### Setup databse credentials
+` export DB_USER="user" `    
+` export DB_PASS="password" `
+### Generate keys  
+` cd setup `    
+` bash generate-server-certificates.sh `   
+` bash generate-bd-client-certificates.sh `    
+` mv -r bd-client ../sah/certs `    
+` mv -r SAH_SERVER ../sah/certs `    
 
-Create server certificate, remove passphrase, and sign it.  
-server-cert.pem = public key, server-key.pem = private key  
-` openssl req -newkey rsa:2048 -days 3600 -nodes -keyout server-key.pem -out server-req.pem `  
-` openssl rsa -in server-key.pem -out server-key.pem `  
-` openssl x509 -req -in server-req.pem -days 3600 -CA ca.pem -CAkey ca-key.pem -set_serial 01 -out server-cert.pem -extfile config.cnf -extensions v3_ca `  
+### Run
+` go run main.go `   
 
-Create client certificate, remove passphrase, and sign it.  
-client-cert.pem = public key, client-key.pem = private key  
-` openssl req -newkey rsa:2048 -days 3600 -nodes -keyout client-key.pem -out client-req.pem `  
-` openssl rsa -in client-key.pem -out client-key.pem `  
-` openssl x509 -req -in client-req.pem -days 3600 -CA ca.pem -CAkey ca-key.pem -set_serial 01 -out client-cert.pem `  
+## Internal office Server setup
+### Environment variables
+` export SECRET_KEY=$(openssl rand 32) `
+` export DB_USER="staff" `   
+` export DB_PASS="password" `  
+### Generate keys
+` cd setup `    
+` bash generate-internal-server-certificates.sh `    
+` bash generate-bd-client-certificates.sh `    
+` mv -r bd-client ../SAH-Backoffice/certs `    
+` mv -r INTERNAL_SAH_SERVER ../SAH-Backoffice/certs `    
 
-Move certificates and key to data folder  
-` mv ca.pem server-cert.pem server-key.pem /var/lib/mysql/ `  
+### Run
+` go run main.go ` 
 
-Distribute ca.pem, client-cert.pem and client-key.pem to clients  
+## Database server setup
+### Generate keys
+` generate-bd-certificates.sh `    
+`sudo mv bd-server/* /var/lib/mysql/ `   
 
-### Allow remote connections
-Edit /etc/mysql/mysql.conf.d/mysqld.cnf file
+### Allow remote connections 
+Edit /etc/mysql/mysql.conf.d/mysqld.cnf file   
 ```
 [mysqld]
 ssl_ca=ca.pem
-ssl_cert=server-cert.pem
-ssl_key=server-key.pem
+ssl_cert=bd-server-cert.pem
+ssl_key=bd-server-key.pem
 tls_version=TLSv1.3
 require_secure_transport=ON
 bind-address = 192.168.2.1
 ```
+### Init
+`sudo systemctl restart mysql.service`  
+Access mysql server and execute:  
+```
+cd database
+\. init.sql
+\. populate.sql
+```
 
 ### User creation
 Access mysql server and execute:  
-` CREATE USER 'frontOffice'@'192.168.0.100' IDENTIFIED WITH sha256_password BY 'password' REQUIRE X509 WITH MAX_USER_CONNECTIONS 500 PASSWORD EXPIRE DEFAULT; `  
-` CREATE USER 'staff'@'192.168.1.1' IDENTIFIED WITH sha256_password BY 'password' REQUIRE X509 WITH MAX_USER_CONNECTIONS 500 PASSWORD EXPIRE D`
-` GRANT SELECT, INSERT, UPDATE ON testdb.* TO 'staff'@'192.168.1.1'; `
-` GRANT SELECT, INSERT, UPDATE ON testdb.* TO 'frontOffice'@'192.168.0.100'; `
+` DROP DATABASE IF EXISTS testdb; `  
+` CREATE DATABASE testdb; `  
+` CREATE USER ''user''@'192.168.0.100' IDENTIFIED WITH sha256_password BY 'password' REQUIRE X509 WITH MAX_USER_CONNECTIONS 500 PASSWORD EXPIRE DEFAULT; `    
+` GRANT SELECT, INSERT, UPDATE ON testdb.* TO 'user'@'192.168.0.100'; `  
+` CREATE USER 'staff'@'192.168.1.1' IDENTIFIED WITH sha256_password BY 'password' REQUIRE X509 WITH MAX_USER_CONNECTIONS 500 PASSWORD EXPIRE DEFAULT; `  
+` GRANT SELECT, INSERT, UPDATE ON testdb.* TO 'staff'@'192.168.1.1'; `    
+
+
+## Internal Doctor machine  
+` bash generate-doctor-certificate.sh 1 `  
+
+
+
+
