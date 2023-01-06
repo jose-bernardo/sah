@@ -6,7 +6,7 @@ Setup CA
 ` bash generate-CA-certificate.sh `  
 Note: All key generation must be made on the same with the same CA certificates
 
-## Front office Server setup 
+## Front office Web Server setup 
 ### Setup databse credentials
 ` export DB_USER="user" `    
 ` export DB_PASS="password" `
@@ -16,6 +16,9 @@ Note: All key generation must be made on the same with the same CA certificates
 ` bash generate-bd-client-certificates.sh `    
 ` mv -r bd-client ../sah/certs `    
 ` mv -r SAH_SERVER ../sah/certs `    
+
+### Run
+` go run main.go `   
 
 ## Internal office Server setup
 ### Environment variables
@@ -28,6 +31,9 @@ Note: All key generation must be made on the same with the same CA certificates
 ` bash generate-bd-client-certificates.sh `    
 ` mv -r bd-client ../SAH-Backoffice/certs `    
 ` mv -r INTERNAL_SAH_SERVER ../SAH-Backoffice/certs `    
+
+### Run
+` go run main.go ` 
 
 ## Database server setup
 ### Generate keys
@@ -45,7 +51,8 @@ tls_version=TLSv1.3
 require_secure_transport=ON
 bind-address = 192.168.2.1
 ```
-###
+### Init
+`sudo systemctl restart mysql.service`  
 Access mysql server and execute:  
 ```
 cd database
@@ -61,6 +68,7 @@ Access mysql server and execute:
 ` GRANT SELECT, INSERT, UPDATE ON testdb.* TO 'user'@'192.168.0.100'; `  
 ` CREATE USER 'staff'@'192.168.1.1' IDENTIFIED WITH sha256_password BY 'password' REQUIRE X509 WITH MAX_USER_CONNECTIONS 500 PASSWORD EXPIRE DEFAULT; `  
 ` GRANT SELECT, INSERT, UPDATE ON testdb.* TO 'staff'@'192.168.1.1'; `    
+
 
 ## Internal Doctor machine  
 ` bash generate-doctor-certificate.sh 1 `  
