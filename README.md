@@ -1,11 +1,10 @@
 # SIRS Project
 
-
 ## CA  setup
 Setup CA  
 ` cd setup `  
 ` bash generate-CA-certificate.sh `  
-Note: All key generation must be made on the same
+Note: All key generation must be made on the same with the same CA certificates
 
 ## Front office Server setup 
 ### Setup databse credentials
@@ -13,8 +12,8 @@ Note: All key generation must be made on the same
 ` export DB_PASS="password" `
 ### Generate keys  
 ` cd setup `    
-` generate-server-certificates.sh `   
-` generate-bd-client-certificates.sh `    
+` bash generate-server-certificates.sh `   
+` bash generate-bd-client-certificates.sh `    
 ` mv -r bd-client ../sah/certs `    
 ` mv -r SAH_SERVER ../sah/certs `    
 
@@ -25,8 +24,8 @@ Note: All key generation must be made on the same
 ` export DB_PASS="password" `  
 ### Generate keys
 ` cd setup `    
-` generate-internal-server-certificates.sh `    
-` generate-bd-client-certificates.sh `    
+` bash generate-internal-server-certificates.sh `    
+` bash generate-bd-client-certificates.sh `    
 ` mv -r bd-client ../SAH-Backoffice/certs `    
 ` mv -r INTERNAL_SAH_SERVER ../SAH-Backoffice/certs `    
 
