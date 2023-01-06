@@ -1,3 +1,4 @@
+!/bin/bash
 
 # flush rules
 sudo iptables -F
@@ -23,4 +24,8 @@ sudo iptables -A FORWARD -i enp0s3 -o enp0s09 -m state --state ESTABLISHED -j AC
 
 # forward https messages to frontoffice server
 sudo iptables -A FORWARD -d 192.168.0.100/32 -p tcp -m tcp --dport 8080 -j ACCEPT
-sudo iptables -t nat -A PREROUTING -d 192.168.2.254/32 -p tcp -m tcp --dport 443 -j DNAT --to-destination 192.168.0.100:8080
+sudo iptables -t nat -A PREROUTING -d 10.0.4.15/32 -p tcp -m tcp --dport 443 -j DNAT --to-destination 192.168.0.100:8080
+
+# forward tcp messages to DMZ
+sudo iptables -A FORWARD -d 192.168.0.100/32 -p tcp -m tcp --dport 8082 -j ACCEPT
+sudo iptables -t nat -A PREROUTING -d 10.0.4.15/32 -p tcp -m tcp --dport 8082 -j DNAT --to-destination 192.168.0.100:8082
