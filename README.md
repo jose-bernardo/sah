@@ -1,14 +1,16 @@
 # SIRS Project
 
+
 ## CA  setup
 Setup CA  
 ` cd setup `  
-` generate-CA-certificate.sh `  
+` bash generate-CA-certificate.sh `  
+Note: All key generation must be made on the same
 
 ## Front office Server setup 
 ### Setup databse credentials
 ` export DB_USER="user" `    
-` export DB_PASS="password" `    
+` export DB_PASS="password" `
 ### Generate keys  
 ` cd setup `    
 ` generate-server-certificates.sh `   
@@ -17,7 +19,8 @@ Setup CA
 ` mv -r SAH_SERVER ../sah/certs `    
 
 ## Internal office Server setup
-### Setup databse credentials
+### Environment variables
+` export SECRET_KEY=$(openssl rand 32) `
 ` export DB_USER="staff" `   
 ` export DB_PASS="password" `  
 ### Generate keys
@@ -43,6 +46,13 @@ tls_version=TLSv1.3
 require_secure_transport=ON
 bind-address = 192.168.2.1
 ```
+###
+Access mysql server and execute:  
+```
+cd database
+\. init.sql
+\. populate.sql
+```
 
 ### User creation
 Access mysql server and execute:  
@@ -54,7 +64,7 @@ Access mysql server and execute:
 ` GRANT SELECT, INSERT, UPDATE ON testdb.* TO 'staff'@'192.168.1.1'; `    
 
 ## Internal Doctor machine  
-` generate-doctor-certificate.sh 1 `  
+` bash generate-doctor-certificate.sh 1 `  
 
 
 
