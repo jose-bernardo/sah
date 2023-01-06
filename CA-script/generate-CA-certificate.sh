@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # Check that the CA name has been passed as an argument
-if [ $# -ne 1 ]; then
-    echo "Usage: create-ca <ca-name>"
-    exit 1
-fi
+#if [ $# -ne 1 ]; then
+#    echo "Usage: create-ca <ca-name>"
+#    exit 1
+#fi
 
-ca_name=$1
+ca_name=CA_sah
 ca_dir="./$ca_name"
 
 mkdir "$ca_dir"
